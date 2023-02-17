@@ -1,0 +1,19 @@
+---
+# defaults file for proxmox
+# proxmox_user: root@pam
+# proxmox_api_password: 
+# proxmox_api_host: 
+
+# Network configuration
+# proxmox_subnet: 10.0.0.
+# proxmox_gateway: 10.0.0.1
+# proxmox_internal_domain: local
+# proxmox_external_domain: domain.tld
+
+# vmid for default template
+proxmox_default_template: 1052
+
+# Empty lists needed for provisioning
+proxmox_vm_deprovision: []
+proxmox_deprovision_vms: []
+proxmox_discovered_vms: []
