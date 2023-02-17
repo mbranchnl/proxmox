@@ -1,0 +1,12 @@
+---
+- name: Pre-flight
+  include_tasks: pre-flight.yml
+
+- name: Provision VM's when discovered
+  include_tasks: vm_provision.yml
+
+- name: Deprovision VM's
+  include_tasks: vm_deprovision.yml
+
+- name: Update VM's according to specs in inventory
+  include_tasks: vm_update.yml

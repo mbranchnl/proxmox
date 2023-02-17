@@ -1,0 +1,56 @@
+---
+- name: Register VM's proxmox_memory  # noqa command-instead-of-shell risky-shell-pipe
+  ansible.builtin.shell: "dmidecode --type proxmox_memory | grep Capacity | awk '{print $3}'"
+  register: ram_info
+  changed_when: false
+  when: inventory_hostname in groups.servers
+
+- name: Load recommended facts from nodes
+  ansible.builtin.setup:
+  delegate_facts: true
+  when:
+    - inventory_hostname in groups.servers
+
+- name: Update VM configuration
+  community.general.cloud.misc.proxmox_kvm:
+    api_user: "{{ proxmox_user }}"
+    api_password: "{{ proxmox_api_password }}"
+    api_host: "{{ proxmox_api_host }}"
+    name: "{{ hostvars[item].inventory_hostname }}"
+    node: "{{ proxmox_api_host }}"
+    cores: "{{ hostvars[item].proxmox_cores }}"
+    memory: "{{ hostvars[item].proxmox_memory }}"
+    update: true
+  loop: "{{ groups.servers }}"
+  when:
+    - inventory_hostname == "localhost"
+    - (hostvars[item].ansible_processor_cores != hostvars[item].proxmox_cores) or
+      (hostvars[item].ram_info.stdout|int*1024 != hostvars[item].proxmox_memory)
+
+- name: Stop VM - scale resources
+  block:
+    - name: Stop VM  # noqa command-instead-of-shell no-changed-when
+      ansible.builtin.command: "qm stop {{ hostvars[item].vmid }}"
+      loop: "{{ groups.servers }}"
+
+    - name: Pause between stop/start
+      ansible.builtin.pause:
+        seconds: 5
+  when:
+    - inventory_hostname == proxmox_api_host
+    - (hostvars[item].ansible_processor_cores != hostvars[item].proxmox_cores) or
+      (hostvars[item].ram_info.stdout|int*1024 != hostvars[item].proxmox_memory)
+
+- name: Start VM - scale resources
+  community.general.cloud.misc.proxmox_kvm:
+    api_user: "{{ proxmox_user }}"
+    api_password: "{{ proxmox_api_password }}"
+    api_host: "{{ proxmox_api_host }}"
+    name: "{{ hostvars[item].inventory_hostname }}"
+    node: "{{ proxmox_api_host }}"
+    state: started
+  loop: "{{ groups.servers }}"
+  when:
+    - inventory_hostname == "localhost"
+    - (hostvars[item].ansible_processor_cores != hostvars[item].proxmox_cores) or
+      (hostvars[item].ram_info.stdout|int*1024 != hostvars[item].proxmox_memory)
