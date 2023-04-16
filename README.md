@@ -1,24 +1,48 @@
 # Proxmox (homelab) state role
 
+This ansible-role helps you deploying Proxmox VMs with ease. In my homelab i deploy VM's within 1 minute.
+
+
 ## Requirements
 
-### Ansible modules
+The following modules are required;
 
-```yaml
----
-collections:
-  - community.general
+Collections:
+
+- community.general
+
+Pip modules:
+
+- ansible
+- requests
+- proxmoxer
+
+The templates you build must use cloudinit inside your proxmox installation and have qemu-qa installed.
+To be able to set hostname etc. configure qemu-qa with;
+
+```shell
+sed -i "s/.*BLACKLIST_RPC.*/#BLACKLIST_RPC=guest-file-open,guest-file-close,guest-file-read,guest-file-write,guest-file-seek,guest-file-flush,guest-exec,guest-exec-status/g" /etc/sysconfig/qemu-ga
 ```
 
-### Pip modules
+## Usage
 
+### First steps
+
+One of the first steps is to configure the vars defined in `defaults/main.yml`. There you define your default template to use etc. etc..
+
+Due to some logic i use you need to defined your proxmox host with inventory_hostname `proxmox_api_host`
+
+e.g.;
 ```yaml
-ansible
-requests
-proxmoxer
+all:
+  hosts:
+    proxmox_api_host:
+      ansible_host: your_server
 ```
 
-## Example inventory
+### Inventory
+
+When you want to deploy a VM define the VM's in the servers hostgroup;
 
 ```yaml
 servers:
@@ -31,7 +55,7 @@ servers:
       vmid: 133
 ```
 
-## Additional resources
+If you want to provide a specific vm with more resource just use host_vars to expand. 
 
 ```yaml
     k3s01:
@@ -39,14 +63,9 @@ servers:
       proxmox_memory: 4096
       proxmox_cores: 2
       datastore: vmstore / vmstore02
-```
-
-## Other template
-
-```yaml
-    centos7:
-      vmid: 111
       template: 1011 (centos7)
-      template: 1012 (centos8)
 ```
 
+## License
+
+gnu-gpl-v3.0

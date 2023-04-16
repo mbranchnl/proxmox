@@ -7,11 +7,13 @@
 # Network configuration
 # proxmox_subnet: 10.0.0.
 # proxmox_gateway: 10.0.0.1
-# proxmox_internal_domain: local
-# proxmox_external_domain: domain.tld
 
 # vmid for default template
 proxmox_default_template: 1052
+
+# Default specs
+proxmox_cores: 1
+proxmox_memory: 2048 # in MB
 
 # Empty lists needed for provisioning
 proxmox_vm_deprovision: []
