@@ -1,2 +1,5 @@
 ---
-# vars file for proxmox
+# Empty lists needed for provisioning
+proxmox_vm_deprovision: []
+proxmox_deprovision_vms: []
+proxmox_provision_vms: []

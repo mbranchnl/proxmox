@@ -1,6 +1,6 @@
 ---
 - name: Clone VM with source vmid and target newid and raw format
-  community.general.cloud.misc.proxmox_kvm:
+  community.general.proxmox_kvm:
     api_user: "{{ proxmox_user }}"
     api_password: "{{ proxmox_api_password }}"
     api_host: "{{ proxmox_api_host }}"
@@ -12,28 +12,11 @@
     storage: "{{ hostvars[item].datastore | default('vmstore02') }}"
     format: qcow2
     timeout: 300
-  loop: "{{ groups.discovered }}"
-  when:
-    - inventory_hostname == "localhost"
-    - "'discovered' in groups"
-
-- name: Remove existing host-keys
-  ansible.builtin.command: "ssh-keygen -R {{ hostvars[item].inventory_hostname }} -f /Users/marijn/.ssh/known_hosts"
-  loop: "{{ groups.discovered }}"
-  changed_when: false
-  when:
-    - inventory_hostname == "localhost"
-    - "'discovered' in groups"
-
-- name: Sleep for 10 seconds and continue with play
-  ansible.builtin.wait_for:
-    timeout: 10
-  when:
-    - inventory_hostname == "localhost"
-    - "'discovered' in groups"
+  loop: "{{ groups.proxmox_provision }}"
+  delegate_to: localhost
 
 - name: Update VM configuration
-  community.general.cloud.misc.proxmox_kvm:
+  community.general.proxmox_kvm:
     api_user: "{{ proxmox_user }}"
     api_password: "{{ proxmox_api_password }}"
     api_host: "{{ proxmox_api_host }}"
@@ -42,46 +25,44 @@
     cores: "{{ hostvars[item].proxmox_cores }}"
     memory: "{{ hostvars[item].proxmox_memory }}"
     update: true
-  loop: "{{ groups.discovered }}"
+  loop: "{{ groups.proxmox_provision }}"
   when:
-    - inventory_hostname == "localhost"
-    - "'discovered' in groups"
+    - "'proxmox_provision' in groups"
+  delegate_to: localhost
 
 - name: Set up IP-adress  # noqa command-instead-of-shell
   ansible.builtin.shell: "qm set {{ hostvars[item].vmid }} --ipconfig0 ip={{ hostvars[item].vmid_ip }}/24,gw={{ proxmox_gateway }}"
-  loop: "{{ groups.discovered }}"
+  loop: "{{ groups.proxmox_provision }}"
   when:
-    - inventory_hostname == "proxmox_api_host"
-    - "'discovered' in groups"
+    - "'proxmox_provision' in groups"
 
 - name: Start VM
-  community.general.cloud.misc.proxmox_kvm:
+  community.general.proxmox_kvm:
     api_user: "{{ proxmox_user }}"
     api_password: "{{ proxmox_api_password }}"
     api_host: "{{ proxmox_api_host }}"
     name: "{{ hostvars[item].inventory_hostname }}"
     node: "{{ proxmox_api_host }}"
     state: started
-  loop: "{{ groups.discovered }}"
+  loop: "{{ groups.proxmox_provision }}"
   when:
-    - inventory_hostname == "localhost"
-    - "'discovered' in groups"
+    - "'proxmox_provision' in groups"
+  delegate_to: localhost
 
 - name: Wait max 5 minutes for port 22 to become open and contain "OpenSSH"
   ansible.builtin.wait_for:
     port: 22
     host: '{{ hostvars[item].vmid_ip }}'
     search_regex: OpenSSH
-    delay: 10
+    delay: 5
     timeout: 300
-  loop: "{{ groups.discovered }}"
+  loop: "{{ groups.proxmox_provision }}"
   when:
-    - inventory_hostname == "localhost"
-    - "'discovered' in groups"
+    - "'proxmox_provision' in groups"
+  delegate_to: localhost
 
 - name: Set up hostname  # noqa command-instead-of-shell
   ansible.builtin.shell: "qm guest exec {{ hostvars[item].vmid }} hostnamectl set-hostname {{ hostvars[item].inventory_hostname }}"
-  loop: "{{ groups.servers }}"
+  loop: "{{ groups.proxmox_provision }}"
   when:
-    - inventory_hostname == "proxmox_api_host"
-    - "'discovered' in groups"
+    - "'proxmox_provision' in groups"

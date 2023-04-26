@@ -4,9 +4,11 @@
 
 - name: Provision VM's when discovered
   include_tasks: vm_provision.yml
+  when: "'proxmox_provision' in groups"
 
 - name: Deprovision VM's
   include_tasks: vm_deprovision.yml
+  when: "'proxmox_deprovision' in groups"
 
-- name: Update VM's according to specs in inventory
-  include_tasks: vm_update.yml
+# - name: Update VM's according to specs in inventory
+#   include_tasks: vm_update.yml
