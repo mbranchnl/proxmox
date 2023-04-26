@@ -1,7 +1,6 @@
 # Proxmox (homelab) state role
 
-This ansible-role helps you deploying Proxmox VMs with ease. In my homelab i deploy VM's within 1 minute.
-
+This ansible-role helps you deploying Proxmox VMs with ease. In my homelab I deploy VM's within 1 minute.
 
 ## Requirements
 
@@ -16,6 +15,18 @@ Pip modules:
 - ansible
 - requests
 - proxmoxer
+
+## Known issues
+
+### VM resource upgrade
+
+Due to some minor issues upgrading of resources is currently disabled
+
+### Power state
+
+Currently all VM's need to be in a powered-on state
+
+### Cloudinit
 
 The templates you build must use cloudinit inside your proxmox installation and have qemu-qa installed.
 To be able to set hostname etc. configure qemu-qa with;

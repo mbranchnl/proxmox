@@ -1,14 +1,12 @@
 ---
 - name: Forced shutdown VM  # noqa command-instead-of-shell
   ansible.builtin.command: "qm stop {{ item }}"
-  loop: "{{ groups.deprovision }}"
+  loop: "{{ groups.proxmox_deprovision }}"
   when:
-    - inventory_hostname == "proxmox_api_host"
-    - "'deprovision' in groups"
+    - "'proxmox_deprovision' in groups"
 
 - name: Remove VM from proxmox  # noqa command-instead-of-shell
   ansible.builtin.shell: "qm destroy {{ item }}"
-  loop: "{{ groups.deprovision }}"
+  loop: "{{ groups.proxmox_deprovision }}"
   when:
-    - inventory_hostname == "proxmox_api_host"
-    - "'deprovision' in groups"
+    - "'proxmox_deprovision' in groups"
