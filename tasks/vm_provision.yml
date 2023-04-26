@@ -1,12 +1,4 @@
 ---
-
-- name: debug
-  debug:
-    msg: 
-      - "{{ groups }}"
-
-- meta: end_play 
-
 - name: Clone VM with source vmid and target newid and raw format
   community.general.proxmox_kvm:
     api_user: "{{ proxmox_user }}"
