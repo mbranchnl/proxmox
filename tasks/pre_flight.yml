@@ -1,14 +1,12 @@
 ---
 - name: Gather facts on VM-host
   ansible.builtin.setup:
-  # when: inventory_hostname == "proxmox_api_host"
 
 - name: Register all available VM's on vm host  # noqa risky-shell-pipe
   ansible.builtin.shell: "qm list | awk '{print $1}' | tail -n +2 | numgrep '/100..254/'"
   register: proxmox_registered_vms
   changed_when: false
   failed_when: "proxmox_registered_vms.rc not in [0, 1]"
-  # when: inventory_hostname == "proxmox_api_host"
 
 - name: Inventories
   block:
