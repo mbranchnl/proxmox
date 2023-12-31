@@ -9,7 +9,7 @@
 # proxmox_gateway: 10.0.0.1
 
 # vmid for default template
-proxmox_default_template: 1052
+proxmox_default_template: 1051
 
 # Default specs
 proxmox_cores: 1
