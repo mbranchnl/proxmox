@@ -1,14 +1,14 @@
 ---
 - name: Clone VM with source vmid and target newid and raw format
   community.general.proxmox_kvm:
-    api_user: "{{ proxmox_user }}"
+    api_user: "{{ proxmox_api_user }}"
     api_password: "{{ proxmox_api_password }}"
-    api_host: "{{ proxmox_api_host }}"
+    api_host: "{{ proxmox_api_hostname }}"
     clone: "template"
     vmid: "{{ hostvars[item].template | default(proxmox_default_template) }}"
     newid: "{{ hostvars[item].vmid }}"
     name: "{{ hostvars[item].inventory_hostname | string }}"
-    node: "{{ proxmox_api_host }}"
+    node: "{{ proxmox_api_hostname }}"
     storage: "{{ hostvars[item].datastore | default('vmstore02') }}"
     format: qcow2
     timeout: 300
@@ -17,12 +17,12 @@
 
 - name: Update VM configuration
   community.general.proxmox_kvm:
-    api_user: "{{ proxmox_user }}"
+    api_user: "{{ proxmox_api_user }}"
     api_password: "{{ proxmox_api_password }}"
-    api_host: "{{ proxmox_api_host }}"
+    api_host: "{{ proxmox_api_hostname }}"
     name: "{{ hostvars[item].inventory_hostname | string }}"
     vmid: "{{ hostvars[item].vmid }}"
-    node: "{{ proxmox_api_host }}"
+    node: "{{ proxmox_api_hostname }}"
     cores: "{{ hostvars[item].proxmox_cores }}"
     memory: "{{ hostvars[item].proxmox_memory }}"
     update: true
@@ -39,11 +39,11 @@
 
 - name: Start VM
   community.general.proxmox_kvm:
-    api_user: "{{ proxmox_user }}"
+    api_user: "{{ proxmox_api_user }}"
     api_password: "{{ proxmox_api_password }}"
-    api_host: "{{ proxmox_api_host }}"
+    api_host: "{{ proxmox_api_hostname }}"
     name: "{{ hostvars[item].inventory_hostname | string }}"
-    node: "{{ proxmox_api_host }}"
+    node: "{{ proxmox_api_hostname }}"
     state: started
   loop: "{{ groups.proxmox_provision }}"
   when:
