@@ -23,8 +23,8 @@
     name: "{{ hostvars[item].inventory_hostname | string }}"
     vmid: "{{ hostvars[item].vmid }}"
     node: "{{ proxmox_api_hostname }}"
-    cores: "{{ hostvars[item].proxmox_cores }}"
-    memory: "{{ hostvars[item].proxmox_memory }}"
+    cores: "{{ hostvars[item].cores | default(hostvars[item].proxmox_cores) }}"
+    memory: "{{ hostvars[item].memory | default(hostvars[item].proxmox_memory) }}"
     update: true
   loop: "{{ groups.proxmox_provision }}"
   when:
