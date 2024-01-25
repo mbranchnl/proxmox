@@ -1,56 +1,57 @@
 ---
-- name: Register VM's proxmox_memory  # noqa command-instead-of-shell risky-shell-pipe
-  ansible.builtin.shell: "dmidecode --type proxmox_memory | grep Capacity | awk '{print $3}'"
-  register: ram_info
+- name: Get current CPU
+  ansible.builtin.shell: "qm status {{ hostvars[item].vmid }} --verbose | grep cpus | sed 's/cpus: //'"
+  register: proxmox_current_cpu
   changed_when: false
-  when: inventory_hostname in groups.servers
 
-- name: Load recommended facts from nodes
-  ansible.builtin.setup:
-  delegate_facts: true
-  when:
-    - inventory_hostname in groups.servers
+- name: Get current memory
+  ansible.builtin.shell: "qm status {{ hostvars[item].vmid }} --verbose | grep max_mem | sed 's/max_mem: //' | sed 's/\t//g'"
+  register: proxmox_current_memory
+  changed_when: false
 
-- name: Update VM configuration
-  community.general.proxmox_kvm:
-    api_user: "{{ proxmox_api_user }}"
-    api_password: "{{ proxmox_api_password }}"
-    api_host: "{{ proxmox_api_hostname }}"
-    name: "{{ hostvars[item].inventory_hostname | string }}"
-    node: "{{ proxmox_api_hostname }}"
-    cores: "{{ hostvars[item].proxmox_cores }}"
-    memory: "{{ hostvars[item].proxmox_memory }}"
-    update: true
-  loop: "{{ groups.servers }}"
-  when:
-    - inventory_hostname == "localhost"
-    - (hostvars[item].ansible_processor_cores != hostvars[item].proxmox_cores) or
-      (hostvars[item].ram_info.stdout|int*1024 != hostvars[item].proxmox_memory)
+- name: Set facts for specifications
+  ansible.builtin.set_fact:
+    proxmox_current_cpu: "{{ proxmox_current_cpu.stdout_lines.0 | string }}"
+    proxmox_current_mem: "{{ (proxmox_current_memory.stdout | float / 1024 / 1024) | int  }}"
+    proxmox_desired_cpu: "{{ hostvars[item].cores | default(hostvars[item].proxmox_cores) }}"
+    proxmox_desired_mem: "{{ hostvars[item].memory | default(hostvars[item].proxmox_memory) }}"
 
-- name: Stop VM - scale resources
+- name: Scale resources
   block:
-    - name: Stop VM  # noqa command-instead-of-shell no-changed-when
-      ansible.builtin.command: "qm stop {{ hostvars[item].vmid }}"
-      loop: "{{ groups.servers }}"
+    - name: Stop VM
+      community.general.proxmox_kvm:
+        api_user: "{{ proxmox_api_user }}"
+        api_password: "{{ proxmox_api_password }}"
+        api_host: "{{ proxmox_api_hostname }}"
+        name: "{{ hostvars[item].inventory_hostname | string }}"
+        node: "{{ proxmox_api_hostname }}"
+        state: stopped
+      delegate_to: localhost
 
-    - name: Pause between stop/start
-      ansible.builtin.pause:
-        seconds: 5
-  when:
-    - inventory_hostname == proxmox_api_host
-    - (hostvars[item].ansible_processor_cores != hostvars[item].proxmox_cores) or
-      (hostvars[item].ram_info.stdout|int*1024 != hostvars[item].proxmox_memory)
+    - name: Update VM configuration
+      community.general.proxmox_kvm:
+        api_user: "{{ proxmox_api_user }}"
+        api_password: "{{ proxmox_api_password }}"
+        api_host: "{{ proxmox_api_hostname }}"
+        name: "{{ hostvars[item].inventory_hostname | string }}"
+        vmid: "{{ hostvars[item].vmid }}"
+        node: "{{ proxmox_api_hostname }}"
+        cores: "{{ hostvars[item].cores }}"
+        memory: "{{ hostvars[item].memory }}"
+        update: true
+      delegate_to: localhost
 
-- name: Start VM - scale resources
-  community.general.proxmox_kvm:
-    api_user: "{{ proxmox_api_user }}"
-    api_password: "{{ proxmox_api_password }}"
-    api_host: "{{ proxmox_api_hostname }}"
-    name: "{{ hostvars[item].inventory_hostname | string }}"
-    node: "{{ proxmox_api_hostname }}"
-    state: started
-  loop: "{{ groups.servers }}"
+    - name: Start VM
+      community.general.proxmox_kvm:
+        api_user: "{{ proxmox_api_user }}"
+        api_password: "{{ proxmox_api_password }}"
+        api_host: "{{ proxmox_api_hostname }}"
+        name: "{{ hostvars[item].inventory_hostname | string }}"
+        node: "{{ proxmox_api_hostname }}"
+        state: started
+      delegate_to: localhost
+
   when:
-    - inventory_hostname == "localhost"
-    - (hostvars[item].ansible_processor_cores != hostvars[item].proxmox_cores) or
-      (hostvars[item].ram_info.stdout|int*1024 != hostvars[item].proxmox_memory)
+    - (proxmox_current_cpu != proxmox_desired_cpu) or
+      (proxmox_current_mem != proxmox_desired_mem)
+  delegate_to: localhost

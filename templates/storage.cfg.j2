@@ -1,0 +1,20 @@
+dir: local
+        path /var/lib/vz
+        content iso,vztmpl,backup
+
+{% for item in proxmox_datastores %}
+{% if (item.show_datastore | default(true)) is true %}
+dir: {{ item.name }}
+	path {{ item.path }}
+	{% if item.content is defined -%}
+	content {{ item.content }}
+	{% else -%}
+	content images
+	{% endif -%}
+	{% if item.retention is defined -%}
+	prune-backups {{ item.retention }}
+	{% endif -%}
+	shared 0
+{% endif %}
+
+{% endfor %}

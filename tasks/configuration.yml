@@ -1,0 +1,62 @@
+---
+- name: "Set authorized key for root taken from file"
+  ansible.posix.authorized_key:
+    user: root
+    state: present
+    key: "{{ lookup('file', '~/.ssh/id_ed25519.pub') }}"
+
+- name: "Set scaling_govenor to {{ proxmox_scaling_governor }}"
+  ansible.builtin.cron:
+    name: "Set scaling_govenor"
+    special_time: reboot
+    job: "echo \"powersave\" | tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor >/dev/null 2>&1"
+
+- name: Disable pve-enterprise subscriptions
+  ansible.builtin.replace:
+    path: "{{ item }}"
+    regexp: '^(?!#)(.*https://enterprise.proxmox.com.*)$'
+    replace: '# \1'
+  loop:
+    - '/etc/apt/sources.list.d/pve-enterprise.list'
+    - '/etc/apt/sources.list.d/ceph.list'
+
+- name: Add pve-no-subscription repo to node
+  ansible.builtin.apt_repository:
+    filename: /etc/apt/sources.list.d/pve-no-subscription.list
+    repo: deb http://download.proxmox.com/debian/pve bookworm pve-no-subscription
+    state: present
+
+- name: Install packages
+  ansible.builtin.apt:
+    name: "{{ item }}"
+    state: present
+    update_cache: true
+  loop:
+    - num-utils
+    - rdiff-backup
+    - ncdu
+    - screen
+
+- name: Add global aliases and exports to /etc/bash.bashrc
+  lineinfile:
+    path: /etc/bash.bashrc
+    line: "{{ item }}"
+    state: present
+  loop:
+    - "alias ll='ls -l'"
+    - "export LANG=en_US.utf-8"
+    - "export LC_ALL=en_US.utf-8"
+
+- name: "Add datastore disks to fstab"
+  ansible.posix.mount:
+    path: '{{ item.path }}'
+    src: '{{ item.dev }}'
+    fstype: '{{ proxmox_datastore_default_fs }}'
+    state: mounted
+  when: item.dev is defined
+  loop: "{{ proxmox_datastores }}"
+
+- name: Add datastores
+  ansible.builtin.template:
+    src: storage.cfg.j2
+    dest: /etc/pve/storage.cfg

@@ -2,6 +2,13 @@
 - name: Pre-flight
   include_tasks: pre_flight.yml
 
+- name: Proxmox node configuration
+  ansible.builtin.include_tasks: configuration.yml
+  when: proxmox_allow_node_configuration
+
+- name: Register defined and existing VM's
+  include_tasks: vm_registration.yml
+
 - name: Provision VM's when discovered
   include_tasks: vm_provision.yml
   when: "'proxmox_provision' in groups"
@@ -10,5 +17,6 @@
   include_tasks: vm_deprovision.yml
   when: "'proxmox_deprovision' in groups"
 
-# - name: Update VM's according to specs in inventory
-#   include_tasks: vm_update.yml
+- name: Update VM's according to specs in inventory
+  include_tasks: vm_update.yml
+  loop: "{{ groups.servers }}"
