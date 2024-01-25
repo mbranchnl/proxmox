@@ -1,12 +1,11 @@
 ---
-# defaults file for proxmox
-# proxmox_user: root@pam
-# proxmox_api_password:
-# proxmox_api_host:
-
-# Network configuration
 # proxmox_subnet: 10.0.0.
 # proxmox_gateway: 10.0.0.1
+# proxmox_api_host_ip: 10.0.0.10
+# proxmox_api_hostname:
+# proxmox_api_user: root@pam
+# proxmox_api_password:
+# proxmox_default_storagepool:
 
 # vmid for default template
 proxmox_default_template: 1012
@@ -14,3 +13,7 @@ proxmox_default_template: 1012
 # Default specs
 proxmox_cores: 1
 proxmox_memory: 2048 # in MB
+
+proxmox_scaling_governor: "powersave"
+proxmox_datastore_default_fs: ext4
+proxmox_allow_node_configuration: true
