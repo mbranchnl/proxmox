@@ -36,6 +36,10 @@
   loop: "{{ proxmox_deprovision_vms }}"
   delegate_to: localhost
 
+- name: Set fact for pihole_subnet
+  ansible.builtin.set_fact:
+    proxmox_subnet: "{{ proxmox_subnet | regex_replace('\\.[^\\.]*$', '') }}"
+
 - name: Set fact for static IP based on vmid
   ansible.builtin.set_fact:
     vmid_ip: "{{ proxmox_subnet }}{{ hostvars[item].vmid }}"
