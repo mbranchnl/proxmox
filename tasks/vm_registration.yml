@@ -42,7 +42,7 @@
 
 - name: Set fact for static IP based on vmid
   ansible.builtin.set_fact:
-    vmid_ip: "{{ proxmox_subnet }}{{ hostvars[item].vmid }}"
+    vmid_ip: "{{ proxmox_subnet }}.{{ hostvars[item].vmid }}"
   delegate_to: "{{ item }}"
   delegate_facts: true
   loop: "{{ groups.servers }}"
