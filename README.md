@@ -18,7 +18,7 @@ Pip modules:
 
 ## Features
 
-- Configure a Proxmox server
+- Configure proxmox servers
 - Deploy VM's
 - Scale deployed VM's
 
@@ -28,34 +28,39 @@ Pip modules:
 
 One of the first steps is to configure the vars defined in `defaults/main.yml`. There you define your default template to use etc. etc..
 
-Due to some logic i use you need to defined your proxmox host with inventory_hostname `proxmox_api_host`
-
 ### Inventory
 
+The inventory should define your Proxmox hosts in the `proxmox` group and your VMs in the `servers` group. For example:
+
 ```yaml
-all:
+proxmox:
   hosts:
-    localhost:
-      ansible_connection: local
-      ansible_python_interpreter: "/opt/homebrew/bin/python3.11"
-    bastion:
-    proxmox_api_host:
-      ansible_host: 0.0.0.0
+    node01:
+      ansible_host: node01.local
+    node02:
+      ansible_host: node02.local
+
+servers:
+  hosts:
+    rke2:
+      vmid: 101
+      node: node01  # Optional: specify which Proxmox node to use
 ```
 
 ### Deployment
 
-When you want to deploy a VM define the VM's in the servers hostgroup;
+When you want to deploy VMs, define them in the servers hostgroup. You can optionally specify which Proxmox node to deploy to using the `node` variable:
 
 ```yaml
 servers:
   hosts:
-    k3s01:
-      vmid: 131
-    k3s02:
-      vmid: 132
-    k3s03:
-      vmid: 133
+    web01:
+      vmid: 101
+    db01:
+      vmid: 102
+    web02:
+      vmid: 101
+      node: node02
 ```
 
 #### VM speficic variables
@@ -67,6 +72,7 @@ servers:
   hosts:
     k3s01:
       vmid: 131
+      node: node01          # Optional: specify which Proxmox node to use
       datastore: 'vmstore01'
       cores: 4
       memory: 4096
