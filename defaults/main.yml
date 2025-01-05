@@ -6,6 +6,7 @@
 # proxmox_api_user: root@pam
 # proxmox_api_password:
 # proxmox_default_storagepool:
+# proxmox_default_node:
 
 # vmid for default template
 proxmox_default_template: 1012

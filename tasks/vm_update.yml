@@ -11,10 +11,10 @@
 
 - name: Set facts for specifications
   ansible.builtin.set_fact:
-    proxmox_current_cpu: "{{ proxmox_current_cpu.stdout_lines.0 | string }}"
-    proxmox_current_mem: "{{ (proxmox_current_memory.stdout | float / 1024 / 1024) | int  }}"
-    proxmox_desired_cpu: "{{ hostvars[item].cores | default(hostvars[item].proxmox_cores) }}"
-    proxmox_desired_mem: "{{ hostvars[item].memory | default(hostvars[item].proxmox_memory) }}"
+    proxmox_current_cpu: "{{ proxmox_current_cpu.stdout_lines[0] | default('0') | string }}"
+    proxmox_current_mem: "{{ (proxmox_current_memory.stdout | default('0') | float / 1024 / 1024) | int }}"
+    proxmox_desired_cpu: "{{ hostvars[item].cores | default(proxmox_cores) }}"
+    proxmox_desired_mem: "{{ hostvars[item].memory | default(proxmox_memory) }}"
 
 - name: Scale resources
   block:
@@ -22,9 +22,9 @@
       community.general.proxmox_kvm:
         api_user: "{{ proxmox_api_user }}"
         api_password: "{{ proxmox_api_password }}"
-        api_host: "{{ proxmox_api_hostname }}"
+        api_host: "{{ hostvars[item].node | default(proxmox_default_node) }}"
         name: "{{ hostvars[item].inventory_hostname | string }}"
-        node: "{{ proxmox_api_hostname }}"
+        node: "{{ hostvars[item].node | default(proxmox_default_node) }}"
         state: stopped
       delegate_to: localhost
 
@@ -32,12 +32,12 @@
       community.general.proxmox_kvm:
         api_user: "{{ proxmox_api_user }}"
         api_password: "{{ proxmox_api_password }}"
-        api_host: "{{ proxmox_api_hostname }}"
+        api_host: "{{ hostvars[item].node | default(proxmox_default_node) }}"
         name: "{{ hostvars[item].inventory_hostname | string }}"
         vmid: "{{ hostvars[item].vmid }}"
-        node: "{{ proxmox_api_hostname }}"
-        cores: "{{ hostvars[item].cores }}"
-        memory: "{{ hostvars[item].memory }}"
+        node: "{{ hostvars[item].node | default(proxmox_default_node) }}"
+        cores: "{{ hostvars[item].cores | default(proxmox_cores) }}"
+        memory: "{{ hostvars[item].memory | default(proxmox_memory) }}"
         update: true
       delegate_to: localhost
 
@@ -45,9 +45,9 @@
       community.general.proxmox_kvm:
         api_user: "{{ proxmox_api_user }}"
         api_password: "{{ proxmox_api_password }}"
-        api_host: "{{ proxmox_api_hostname }}"
+        api_host: "{{ hostvars[item].node | default(proxmox_default_node) }}"
         name: "{{ hostvars[item].inventory_hostname | string }}"
-        node: "{{ proxmox_api_hostname }}"
+        node: "{{ hostvars[item].node | default(proxmox_default_node) }}"
         state: started
       delegate_to: localhost
 
