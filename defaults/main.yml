@@ -8,6 +8,10 @@
 # proxmox_default_storagepool:
 # proxmox_default_node:
 
+proxmox_server_iprange:
+  start: "192.168.1.100"
+  end: "192.168.1.254"
+
 # vmid for default template
 proxmox_default_template: 1012
 
