@@ -31,7 +31,7 @@
     - "'proxmox_provision' in groups"
   delegate_to: localhost
 
-- name: Set up IP-adress  # noqa command-instead-of-shell
+- name: Set up IP-adress  # noqa command-instead-of-shell no-changed-when
   ansible.builtin.shell: "qm set {{ hostvars[item].vmid }} --ipconfig0 ip={{ hostvars[item].vmid_ip }}/24,gw={{ proxmox_gateway }}"
   loop: "{{ groups.proxmox_provision }}"
   when:
@@ -62,7 +62,7 @@
     - "'proxmox_provision' in groups"
   delegate_to: localhost
 
-- name: Set up hostname  # noqa command-instead-of-shell
+- name: Set up hostname  # noqa command-instead-of-shell no-changed-when
   ansible.builtin.shell: "qm guest exec {{ hostvars[item].vmid }} hostnamectl set-hostname {{ hostvars[item].inventory_hostname }}"
   loop: "{{ groups.proxmox_provision }}"
   when:

@@ -1,10 +1,10 @@
 ---
-- name: Get current CPU
+- name: Get current CPU  # noqa risky-shell-pipe
   ansible.builtin.shell: "qm status {{ hostvars[item].vmid }} --verbose | grep cpus | sed 's/cpus: //'"
   register: proxmox_current_cpu
   changed_when: false
 
-- name: Get current memory
+- name: Get current memory  # noqa risky-shell-pipe
   ansible.builtin.shell: "qm status {{ hostvars[item].vmid }} --verbose | grep max_mem | sed 's/max_mem: //' | sed 's/\t//g'"
   register: proxmox_current_memory
   changed_when: false
@@ -17,6 +17,10 @@
     proxmox_desired_mem: "{{ hostvars[item].memory | default(proxmox_memory) }}"
 
 - name: Scale resources
+  when:
+    - (proxmox_current_cpu != proxmox_desired_cpu) or
+      (proxmox_current_mem != proxmox_desired_mem)
+  delegate_to: localhost
   block:
     - name: Stop VM
       community.general.proxmox_kvm:
@@ -50,8 +54,3 @@
         node: "{{ hostvars[item].node | default(proxmox_default_node) }}"
         state: started
       delegate_to: localhost
-
-  when:
-    - (proxmox_current_cpu != proxmox_desired_cpu) or
-      (proxmox_current_mem != proxmox_desired_mem)
-  delegate_to: localhost
