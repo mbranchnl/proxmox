@@ -16,41 +16,42 @@
     proxmox_desired_cpu: "{{ hostvars[item].cores | default(proxmox_cores) }}"
     proxmox_desired_mem: "{{ hostvars[item].memory | default(proxmox_memory) }}"
 
-- name: Scale resources
-  when:
-    - (proxmox_current_cpu != proxmox_desired_cpu) or
-      (proxmox_current_mem != proxmox_desired_mem)
-  delegate_to: localhost
-  block:
-    - name: Stop VM
-      community.general.proxmox_kvm:
-        api_user: "{{ proxmox_api_user }}"
-        api_password: "{{ proxmox_api_password }}"
-        api_host: "{{ hostvars[item].node | default(proxmox_default_node) }}"
-        name: "{{ hostvars[item].inventory_hostname | string }}"
-        node: "{{ hostvars[item].node | default(proxmox_default_node) }}"
-        state: stopped
-      delegate_to: localhost
+# - name: Scale resources
+#   when:
+#     - (proxmox_current_cpu != proxmox_desired_cpu) or
+#       (proxmox_current_mem != proxmox_desired_mem)
+#     - inventory_hostname == hostvars[item].node | default(proxmox_default_node)
+#   delegate_to: localhost
+#   block:
+#     - name: Stop VM
+#       community.general.proxmox_kvm:
+#         api_user: "{{ proxmox_api_user }}"
+#         api_password: "{{ proxmox_api_password }}"
+#         api_host: "{{ hostvars[item].node | default(proxmox_default_node) }}"
+#         name: "{{ hostvars[item].inventory_hostname | string }}"
+#         node: "{{ hostvars[item].node | default(proxmox_default_node) }}"
+#         state: stopped
+#       delegate_to: localhost
 
-    - name: Update VM configuration
-      community.general.proxmox_kvm:
-        api_user: "{{ proxmox_api_user }}"
-        api_password: "{{ proxmox_api_password }}"
-        api_host: "{{ hostvars[item].node | default(proxmox_default_node) }}"
-        name: "{{ hostvars[item].inventory_hostname | string }}"
-        vmid: "{{ hostvars[item].vmid }}"
-        node: "{{ hostvars[item].node | default(proxmox_default_node) }}"
-        cores: "{{ hostvars[item].cores | default(proxmox_cores) }}"
-        memory: "{{ hostvars[item].memory | default(proxmox_memory) }}"
-        update: true
-      delegate_to: localhost
+#     - name: Update VM configuration
+#       community.general.proxmox_kvm:
+#         api_user: "{{ proxmox_api_user }}"
+#         api_password: "{{ proxmox_api_password }}"
+#         api_host: "{{ hostvars[item].node | default(proxmox_default_node) }}"
+#         name: "{{ hostvars[item].inventory_hostname | string }}"
+#         vmid: "{{ hostvars[item].vmid }}"
+#         node: "{{ hostvars[item].node | default(proxmox_default_node) }}"
+#         cores: "{{ hostvars[item].cores | default(proxmox_cores) }}"
+#         memory: "{{ hostvars[item].memory | default(proxmox_memory) }}"
+#         update: true
+#       delegate_to: localhost
 
-    - name: Start VM
-      community.general.proxmox_kvm:
-        api_user: "{{ proxmox_api_user }}"
-        api_password: "{{ proxmox_api_password }}"
-        api_host: "{{ hostvars[item].node | default(proxmox_default_node) }}"
-        name: "{{ hostvars[item].inventory_hostname | string }}"
-        node: "{{ hostvars[item].node | default(proxmox_default_node) }}"
-        state: started
-      delegate_to: localhost
+#     - name: Start VM
+#       community.general.proxmox_kvm:
+#         api_user: "{{ proxmox_api_user }}"
+#         api_password: "{{ proxmox_api_password }}"
+#         api_host: "{{ hostvars[item].node | default(proxmox_default_node) }}"
+#         name: "{{ hostvars[item].inventory_hostname | string }}"
+#         node: "{{ hostvars[item].node | default(proxmox_default_node) }}"
+#         state: started
+#       delegate_to: localhost
