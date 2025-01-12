@@ -14,18 +14,20 @@
     proxmox_inventory_vms: "{{ proxmox_inventory_vms + (proxmox_registered_vms.stdout_lines | default([])) }}"
   when: proxmox_registered_vms.stdout_lines is defined
 
-- name: Initialize provision VMs list
+- name: Initialize provision new VMs list
   ansible.builtin.set_fact:
     proxmox_provision_vms: []
   delegate_to: localhost
 
-- name: Set discovered VMs
+- name: Set discovered new VMs
   ansible.builtin.set_fact:
     proxmox_provision_vms: "{{ proxmox_provision_vms + [hostvars[item].vmid] }}"
   loop: "{{ groups.servers }}"
+  when:
+    - inventory_hostname == hostvars[item].node | default(proxmox_default_node)
   delegate_to: localhost
 
-- name: Add discovered VMs to group discovered
+- name: Add discovered VMs to provision group
   ansible.builtin.add_host:
     name: "{{ item }}"
     groups: proxmox_provision
@@ -39,7 +41,7 @@
     proxmox_deprovision_vms: "{{ (proxmox_inventory_vms | map('int') | list | difference(proxmox_provision_vms)) | list }}"
   delegate_to: localhost
 
-- name: Add hosts to deprovision to group deprovision
+- name: Add hosts to deprovision to deprovision group
   ansible.builtin.add_host:
     name: "{{ item | string }}"
     groups: proxmox_deprovision
@@ -55,4 +57,6 @@
     vmid_ip: "{{ proxmox_subnet }}.{{ hostvars[item].vmid }}"
   delegate_to: "{{ item }}"
   delegate_facts: true
+  when:
+    - inventory_hostname == hostvars[item].node | default(proxmox_default_node)
   loop: "{{ groups.servers }}"
