@@ -3,8 +3,8 @@
   ansible.builtin.set_fact:
     proxmox_inventory_vms: []
 
-- name: Register all available VM's on vm host with in allowed range ({{ proxmox_server_iprange.start.split('.')[-1] }}..{{ proxmox_server_iprange.end.split('.')[-1] }})  # noqa risky-shell-pipe
-  ansible.builtin.shell: "qm list | awk '{print $1}' | tail -n +2 | numgrep '/{{ proxmox_server_iprange.start.split('.')[-1] }}..{{ proxmox_server_iprange.end.split('.')[-1] }}/'"
+- name: Register all available VM's on vm host with in allowed range ({{ proxmox_server_iprange.start.split('.')[-1] }}..{{ proxmox_server_iprange.end.split('.')[-1] }})  # noqa risky-shell-pipe name[template] yaml[line-length]
+  ansible.builtin.shell: "qm list | awk '{print $1}' | tail -n +2 | numgrep '/{{ proxmox_server_iprange.start.split('.')[-1] }}..{{ proxmox_server_iprange.end.split('.')[-1] }}/'"  # noqa yaml[line-length]
   register: proxmox_registered_vms
   changed_when: false
   failed_when: "proxmox_registered_vms.rc not in [0, 1]"
