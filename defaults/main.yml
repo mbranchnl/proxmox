@@ -1,6 +1,5 @@
 ---
 # proxmox_subnet: 10.0.0.
-# proxmox_gateway: 10.0.0.1
 # proxmox_api_host_ip: 10.0.0.10
 # proxmox_api_hostname:
 # proxmox_api_user: root@pam
@@ -11,6 +10,8 @@
 proxmox_server_iprange:
   start: "192.168.1.100"
   end: "192.168.1.254"
+
+proxmox_gateway: "{{ proxmox_subnet | ansible.utils.ipaddr('net') | ansible.utils.ipaddr('1') | ansible.utils.ipaddr('address') }}"
 
 # vmid for default template
 proxmox_default_template: 1012

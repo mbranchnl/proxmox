@@ -63,6 +63,29 @@ servers:
       node: node02
 ```
 
+or when you work with children:
+
+```yaml
+servers:
+  children:
+    servers_nestorix:
+    servers_obelix:
+
+servers_obelix:
+  hosts:
+    test:
+      vmid: 110
+      node: obelix
+      # cores: 4
+      # memory: 8192
+
+servers_nestorix:
+  hosts:
+    rke2:
+      vmid: 200
+      node: nestorix
+```
+
 #### VM speficic variables
 
 You can override the proxmox_cores and proxmox_memory variables by adding the desired specs to the specific host. Same for a different datastore or template to use:

@@ -33,7 +33,6 @@
     update_cache: true
   loop:
     - num-utils
-    - rdiff-backup
     - ncdu
     - screen
 

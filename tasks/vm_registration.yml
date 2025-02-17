@@ -14,11 +14,6 @@
     proxmox_inventory_vms: "{{ proxmox_inventory_vms + (proxmox_registered_vms.stdout_lines | default([])) }}"
   when: proxmox_registered_vms.stdout_lines is defined
 
-- name: Initialize provision new VMs list
-  ansible.builtin.set_fact:
-    proxmox_provision_vms: []
-  delegate_to: localhost
-
 - name: Set discovered new VMs
   ansible.builtin.set_fact:
     proxmox_provision_vms: "{{ proxmox_provision_vms + [hostvars[item].vmid] }}"
@@ -30,7 +25,7 @@
 - name: Add discovered VMs to provision group
   ansible.builtin.add_host:
     name: "{{ item }}"
-    groups: proxmox_provision
+    groups: "proxmox_provision_{{ inventory_hostname }}"
   when:
     - hostvars[item].vmid | string not in proxmox_inventory_vms
     - inventory_hostname == hostvars[item].node | default(proxmox_default_node)
@@ -44,19 +39,17 @@
 - name: Add hosts to deprovision to deprovision group
   ansible.builtin.add_host:
     name: "{{ item | string }}"
-    groups: proxmox_deprovision
+    groups: "proxmox_deprovision_{{ inventory_hostname }}"
   loop: "{{ proxmox_deprovision_vms }}"
   delegate_to: localhost
 
-- name: Set fact for pihole_subnet
-  ansible.builtin.set_fact:
-    proxmox_subnet: "{{ proxmox_subnet | regex_replace('\\.[^\\.]*$', '') }}"
-
 - name: Set fact for static IP based on vmid
   ansible.builtin.set_fact:
-    vmid_ip: "{{ proxmox_subnet }}.{{ hostvars[item].vmid }}"
+    vmid_ip: "{{ proxmox_subnet_stripped }}.{{ hostvars[item].vmid }}"
   delegate_to: "{{ item }}"
   delegate_facts: true
+  vars:
+    proxmox_subnet_stripped: "{{ proxmox_subnet | regex_replace('\\.[^\\.]*$', '') }}"
   when:
     - inventory_hostname == hostvars[item].node | default(proxmox_default_node)
   loop: "{{ groups.servers }}"
