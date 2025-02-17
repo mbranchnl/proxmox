@@ -11,12 +11,12 @@
 
 - name: Provision VM's when discovered
   ansible.builtin.include_tasks: vm_provision.yml
-  when: "'proxmox_provision' in groups"
+  when: "'proxmox_provision_' + inventory_hostname in groups"
 
 - name: Deprovision VM's
   ansible.builtin.include_tasks: vm_deprovision.yml
-  when: "'proxmox_deprovision' in groups"
+  when: "'proxmox_deprovision_' + inventory_hostname in groups"
 
-- name: Update VM's according to specs in inventory
-  ansible.builtin.include_tasks: vm_update.yml
-  loop: "{{ groups.servers }}"
+# - name: Update VM's according to specs in inventory
+#   ansible.builtin.include_tasks: vm_update.yml
+#   loop: "{{ groups.servers }}"

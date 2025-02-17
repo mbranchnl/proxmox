@@ -1,27 +1,34 @@
 ---
-- name: Register all available VM's on vm host  # noqa risky-shell-pipe
-  ansible.builtin.shell: "qm list | awk '{print $1}' | tail -n +2 | numgrep '/100..254/'"
+- name: Initialize empty VM list
+  ansible.builtin.set_fact:
+    proxmox_inventory_vms: []
+
+- name: Register all available VM's on vm host with in allowed range ({{ proxmox_server_iprange.start.split('.')[-1] }}..{{ proxmox_server_iprange.end.split('.')[-1] }})  # noqa risky-shell-pipe name[template] yaml[line-length]
+  ansible.builtin.shell: "qm list | awk '{print $1}' | tail -n +2 | numgrep '/{{ proxmox_server_iprange.start.split('.')[-1] }}..{{ proxmox_server_iprange.end.split('.')[-1] }}/'"  # noqa yaml[line-length]
   register: proxmox_registered_vms
   changed_when: false
   failed_when: "proxmox_registered_vms.rc not in [0, 1]"
 
-- name: Inventories
-  block:
-    - name: Set current inventory based on all existing VM's on vm host
-      ansible.builtin.set_fact:
-        proxmox_inventory_vms: "{{ hostvars.proxmox_api_host.proxmox_registered_vms.stdout_lines }}"
+- name: Set current inventory based on all existing VM's on vm host
+  ansible.builtin.set_fact:
+    proxmox_inventory_vms: "{{ proxmox_inventory_vms + (proxmox_registered_vms.stdout_lines | default([])) }}"
+  when: proxmox_registered_vms.stdout_lines is defined
 
-    - name: Set discovered VMs
-      ansible.builtin.set_fact:
-        proxmox_provision_vms: '{{ proxmox_provision_vms + [hostvars[item].vmid] }}'
-      loop: "{{ groups.servers }}"
+- name: Set discovered new VMs
+  ansible.builtin.set_fact:
+    proxmox_provision_vms: "{{ proxmox_provision_vms + [hostvars[item].vmid] }}"
+  loop: "{{ groups.servers }}"
+  when:
+    - inventory_hostname == hostvars[item].node | default(proxmox_default_node)
   delegate_to: localhost
 
-- name: Add discovered VMs to group discovered
+- name: Add discovered VMs to provision group
   ansible.builtin.add_host:
     name: "{{ item }}"
-    groups: proxmox_provision
-  when: hostvars[item].vmid | string not in proxmox_inventory_vms
+    groups: "proxmox_provision_{{ inventory_hostname }}"
+  when:
+    - hostvars[item].vmid | string not in proxmox_inventory_vms
+    - inventory_hostname == hostvars[item].node | default(proxmox_default_node)
   loop: "{{ groups.servers }}"
 
 - name: Set deprovision inventory
@@ -29,20 +36,20 @@
     proxmox_deprovision_vms: "{{ (proxmox_inventory_vms | map('int') | list | difference(proxmox_provision_vms)) | list }}"
   delegate_to: localhost
 
-- name: Add hosts to deprovision to group deprovision
+- name: Add hosts to deprovision to deprovision group
   ansible.builtin.add_host:
     name: "{{ item | string }}"
-    groups: proxmox_deprovision
+    groups: "proxmox_deprovision_{{ inventory_hostname }}"
   loop: "{{ proxmox_deprovision_vms }}"
   delegate_to: localhost
 
-- name: Set fact for pihole_subnet
-  ansible.builtin.set_fact:
-    proxmox_subnet: "{{ proxmox_subnet | regex_replace('\\.[^\\.]*$', '') }}"
-
 - name: Set fact for static IP based on vmid
   ansible.builtin.set_fact:
-    vmid_ip: "{{ proxmox_subnet }}.{{ hostvars[item].vmid }}"
+    vmid_ip: "{{ proxmox_subnet_stripped }}.{{ hostvars[item].vmid }}"
   delegate_to: "{{ item }}"
   delegate_facts: true
+  vars:
+    proxmox_subnet_stripped: "{{ proxmox_subnet | regex_replace('\\.[^\\.]*$', '') }}"
+  when:
+    - inventory_hostname == hostvars[item].node | default(proxmox_default_node)
   loop: "{{ groups.servers }}"

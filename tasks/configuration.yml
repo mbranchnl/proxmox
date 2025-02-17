@@ -33,12 +33,11 @@
     update_cache: true
   loop:
     - num-utils
-    - rdiff-backup
     - ncdu
     - screen
 
 - name: Add global aliases and exports to /etc/bash.bashrc
-  lineinfile:
+  ansible.builtin.lineinfile:
     path: /etc/bash.bashrc
     line: "{{ item }}"
     state: present
@@ -60,3 +59,4 @@
   ansible.builtin.template:
     src: storage.cfg.j2
     dest: /etc/pve/storage.cfg
+    mode: '644'

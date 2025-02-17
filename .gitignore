@@ -1,1 +1,6 @@
+# Folders
+.ansible
 .vscode
+
+# Files
+.DS_Store

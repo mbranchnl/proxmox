@@ -12,7 +12,9 @@
     storage: "{{ hostvars[item].datastore | default('vmstore02') }}"
     format: qcow2
     timeout: 300
-  loop: "{{ groups.proxmox_provision }}"
+  loop: "{{ groups['proxmox_provision_' + inventory_hostname] }}"
+  when:
+    - inventory_hostname == hostvars[item].node | default(proxmox_default_node)
   delegate_to: localhost
 
 - name: Update VM configuration
@@ -23,19 +25,21 @@
     name: "{{ hostvars[item].inventory_hostname | string }}"
     vmid: "{{ hostvars[item].vmid }}"
     node: "{{ proxmox_api_hostname }}"
-    cores: "{{ hostvars[item].cores | default(hostvars[item].proxmox_cores) }}"
-    memory: "{{ hostvars[item].memory | default(hostvars[item].proxmox_memory) }}"
+    cores: "{{ hostvars[item].cores | default(proxmox_cores) }}"
+    memory: "{{ hostvars[item].memory | default(proxmox_memory) }}"
     update: true
-  loop: "{{ groups.proxmox_provision }}"
+  loop: "{{ groups['proxmox_provision_' + inventory_hostname] }}"
   when:
     - "'proxmox_provision' in groups"
+    - inventory_hostname == hostvars[item].node | default(proxmox_default_node)
   delegate_to: localhost
 
-- name: Set up IP-adress  # noqa command-instead-of-shell
+- name: Set up IP-adress  # noqa command-instead-of-shell no-changed-when
   ansible.builtin.shell: "qm set {{ hostvars[item].vmid }} --ipconfig0 ip={{ hostvars[item].vmid_ip }}/24,gw={{ proxmox_gateway }}"
-  loop: "{{ groups.proxmox_provision }}"
+  loop: "{{ groups['proxmox_provision_' + inventory_hostname] }}"
   when:
     - "'proxmox_provision' in groups"
+    - inventory_hostname == hostvars[item].node | default(proxmox_default_node)
 
 - name: Start VM
   community.general.proxmox_kvm:
@@ -45,9 +49,10 @@
     name: "{{ hostvars[item].inventory_hostname | string }}"
     node: "{{ proxmox_api_hostname }}"
     state: started
-  loop: "{{ groups.proxmox_provision }}"
+  loop: "{{ groups['proxmox_provision_' + inventory_hostname] }}"
   when:
-    - "'proxmox_provision' in groups"
+    - "'proxmox_provision_' + inventory_hostname in groups"
+    - inventory_hostname == hostvars[item].node | default(proxmox_default_node)
   delegate_to: localhost
 
 - name: Wait max 5 minutes for port 22 to become open and contain "OpenSSH"
@@ -57,13 +62,15 @@
     search_regex: OpenSSH
     delay: 5
     timeout: 300
-  loop: "{{ groups.proxmox_provision }}"
+  loop: "{{ groups['proxmox_provision_' + inventory_hostname] }}"
   when:
     - "'proxmox_provision' in groups"
+    - inventory_hostname == hostvars[item].node | default(proxmox_default_node)
   delegate_to: localhost
 
-- name: Set up hostname  # noqa command-instead-of-shell
+- name: Set up hostname  # noqa command-instead-of-shell no-changed-when
   ansible.builtin.shell: "qm guest exec {{ hostvars[item].vmid }} hostnamectl set-hostname {{ hostvars[item].inventory_hostname }}"
-  loop: "{{ groups.proxmox_provision }}"
+  loop: "{{ groups['proxmox_provision_' + inventory_hostname] }}"
   when:
     - "'proxmox_provision' in groups"
+    - inventory_hostname == hostvars[item].node | default(proxmox_default_node)
