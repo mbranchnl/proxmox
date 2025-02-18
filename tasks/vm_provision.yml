@@ -30,7 +30,7 @@
     update: true
   loop: "{{ groups['proxmox_provision_' + inventory_hostname] }}"
   when:
-    - "'proxmox_provision' in groups"
+    - "'proxmox_provision_' + inventory_hostname in groups"
     - inventory_hostname == hostvars[item].node | default(proxmox_default_node)
   delegate_to: localhost
 
@@ -38,7 +38,7 @@
   ansible.builtin.shell: "qm set {{ hostvars[item].vmid }} --ipconfig0 ip={{ hostvars[item].vmid_ip }}/24,gw={{ proxmox_gateway }}"
   loop: "{{ groups['proxmox_provision_' + inventory_hostname] }}"
   when:
-    - "'proxmox_provision' in groups"
+    - "'proxmox_provision_' + inventory_hostname in groups"
     - inventory_hostname == hostvars[item].node | default(proxmox_default_node)
 
 - name: Start VM
@@ -64,7 +64,7 @@
     timeout: 300
   loop: "{{ groups['proxmox_provision_' + inventory_hostname] }}"
   when:
-    - "'proxmox_provision' in groups"
+    - "'proxmox_provision_' + inventory_hostname in groups"
     - inventory_hostname == hostvars[item].node | default(proxmox_default_node)
   delegate_to: localhost
 
@@ -72,5 +72,5 @@
   ansible.builtin.shell: "qm guest exec {{ hostvars[item].vmid }} hostnamectl set-hostname {{ hostvars[item].inventory_hostname }}"
   loop: "{{ groups['proxmox_provision_' + inventory_hostname] }}"
   when:
-    - "'proxmox_provision' in groups"
+    - "'proxmox_provision_' + inventory_hostname in groups"
     - inventory_hostname == hostvars[item].node | default(proxmox_default_node)
