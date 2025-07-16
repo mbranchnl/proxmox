@@ -9,7 +9,7 @@
 - name: Register defined and existing VM's
   ansible.builtin.include_tasks: vm_registration.yml
 
-- name: Provision VM's when discovered
+- name: Provision VM's
   ansible.builtin.include_tasks: vm_provision.yml
   when: "'proxmox_provision_' + inventory_hostname in groups"
 
