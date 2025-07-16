@@ -4,14 +4,14 @@
   register: proxmox_current_cpu
   changed_when: false
   when:
-    - inventory_hostname == hostvars[item].node | default(proxmox_default_node)
+    - inventory_hostname == hostvars[item].node | default(inventory_hostname)
 
 - name: Get current memory  # noqa risky-shell-pipe
   ansible.builtin.shell: "qm status {{ hostvars[item].vmid }} --verbose | grep max_mem | sed 's/max_mem: //' | sed 's/\t//g'"
   register: proxmox_current_memory
   changed_when: false
   when:
-    - inventory_hostname == hostvars[item].node | default(proxmox_default_node)
+    - inventory_hostname == hostvars[item].node | default(inventory_hostname)
 
 - name: Set facts for specifications
   ansible.builtin.set_fact:
@@ -20,7 +20,7 @@
     proxmox_desired_cpu: "{{ hostvars[item].cores | default(proxmox_cores) }}"
     proxmox_desired_mem: "{{ hostvars[item].memory | default(proxmox_memory) }}"
   when:
-    - inventory_hostname == hostvars[item].node | default(proxmox_default_node)
+    - inventory_hostname == hostvars[item].node | default(inventory_hostname)
 
 # - name: Scale resources
 #   when:

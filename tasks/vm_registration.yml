@@ -17,7 +17,7 @@
 - name: Set discovered new VMs
   ansible.builtin.set_fact:
     proxmox_provision_vms: "{{ proxmox_provision_vms + [hostvars[item].vmid] }}"
-  loop: "{{ groups.servers }}"
+  loop: "{{ vms }}"
   when:
     - inventory_hostname == hostvars[item].node | default(proxmox_default_node)
   delegate_to: localhost
@@ -29,7 +29,7 @@
   when:
     - hostvars[item].vmid | string not in proxmox_inventory_vms
     - inventory_hostname == hostvars[item].node | default(proxmox_default_node)
-  loop: "{{ groups.servers }}"
+  loop: "{{ vms }}"
 
 - name: Set deprovision inventory
   ansible.builtin.set_fact:
@@ -52,4 +52,4 @@
     proxmox_subnet_stripped: "{{ proxmox_subnet | regex_replace('\\.[^\\.]*$', '') }}"
   when:
     - inventory_hostname == hostvars[item].node | default(proxmox_default_node)
-  loop: "{{ groups.servers }}"
+  loop: "{{ vms }}"

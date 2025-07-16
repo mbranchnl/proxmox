@@ -14,7 +14,7 @@
     timeout: 300
   loop: "{{ groups['proxmox_provision_' + inventory_hostname] }}"
   when:
-    - inventory_hostname == hostvars[item].node | default(proxmox_default_node)
+    - inventory_hostname == hostvars[item].node | default(inventory_hostname)
   delegate_to: localhost
 
 - name: Update VM configuration
@@ -31,7 +31,7 @@
   loop: "{{ groups['proxmox_provision_' + inventory_hostname] }}"
   when:
     - "'proxmox_provision_' + inventory_hostname in groups"
-    - inventory_hostname == hostvars[item].node | default(proxmox_default_node)
+    - inventory_hostname == hostvars[item].node | default(inventory_hostname)
   delegate_to: localhost
 
 - name: Set up IP-adress  # noqa command-instead-of-shell no-changed-when
@@ -39,7 +39,7 @@
   loop: "{{ groups['proxmox_provision_' + inventory_hostname] }}"
   when:
     - "'proxmox_provision_' + inventory_hostname in groups"
-    - inventory_hostname == hostvars[item].node | default(proxmox_default_node)
+    - inventory_hostname == hostvars[item].node | default(inventory_hostname)
 
 - name: Start VM
   community.general.proxmox_kvm:
@@ -52,7 +52,7 @@
   loop: "{{ groups['proxmox_provision_' + inventory_hostname] }}"
   when:
     - "'proxmox_provision_' + inventory_hostname in groups"
-    - inventory_hostname == hostvars[item].node | default(proxmox_default_node)
+    - inventory_hostname == hostvars[item].node | default(inventory_hostname)
   delegate_to: localhost
 
 - name: Wait max 5 minutes for port 22 to become open and contain "OpenSSH"
@@ -65,7 +65,7 @@
   loop: "{{ groups['proxmox_provision_' + inventory_hostname] }}"
   when:
     - "'proxmox_provision_' + inventory_hostname in groups"
-    - inventory_hostname == hostvars[item].node | default(proxmox_default_node)
+    - inventory_hostname == hostvars[item].node | default(inventory_hostname)
   delegate_to: localhost
 
 - name: Set up hostname  # noqa command-instead-of-shell no-changed-when
@@ -73,4 +73,4 @@
   loop: "{{ groups['proxmox_provision_' + inventory_hostname] }}"
   when:
     - "'proxmox_provision_' + inventory_hostname in groups"
-    - inventory_hostname == hostvars[item].node | default(proxmox_default_node)
+    - inventory_hostname == hostvars[item].node | default(inventory_hostname)
