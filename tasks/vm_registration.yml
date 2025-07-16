@@ -19,6 +19,7 @@
     proxmox_provision_vms: "{{ proxmox_provision_vms + [item.vmid] }}"
   loop: "{{ vms }}"
   when:
+    - item.vmid | string not in proxmox_inventory_vms
     - inventory_hostname == item.node | default(inventory_hostname)
   delegate_to: localhost
 
@@ -27,20 +28,25 @@
     name: "{{ item.name }}"
     groups: "proxmox_provision_{{ inventory_hostname }}"
     vmid: "{{ item.vmid }}"
-    cores: "{{ item.cores | default(proxmox_default_cores) }}"
-    memory: "{{ item.memory | default(proxmox_default_memory) }}"
-    disk: "{{ item.disk | default(proxmox_default_disk) }}"
-    storage: "{{ item.storage | default(proxmox_default_storage) }}"
-    template: "{{ item.template | default(proxmox_default_template) }}"
+    cores: "{{ item.cores | default(proxmox_default_cores | default(omit)) }}"
+    memory: "{{ item.memory | default(proxmox_default_memory | default(omit)) }}"
+    disk: "{{ item.disk | default(proxmox_default_disk | default(omit)) }}"
+    storage: "{{ item.storage | default(proxmox_default_storage | default(omit)) }}"
+    template: "{{ item.template | default(proxmox_default_template | default(omit)) }}"
     node: "{{ item.node | default(inventory_hostname) }}"
   when:
     - item.vmid | string not in proxmox_inventory_vms
     - inventory_hostname == item.node | default(inventory_hostname)
   loop: "{{ vms }}"
 
+- name: Set all configured VM IDs
+  ansible.builtin.set_fact:
+    proxmox_configured_vms: "{{ vms | selectattr('node', 'undefined') | map(attribute='vmid') | list + vms | selectattr('node', 'defined') | selectattr('node', 'equalto', inventory_hostname) | map(attribute='vmid') | list }}"
+  delegate_to: localhost
+
 - name: Set deprovision inventory
   ansible.builtin.set_fact:
-    proxmox_deprovision_vms: "{{ (proxmox_inventory_vms | map('int') | list | difference(proxmox_provision_vms)) | list }}"
+    proxmox_deprovision_vms: "{{ (proxmox_inventory_vms | map('int') | list | difference(proxmox_configured_vms)) | list }}"
   delegate_to: localhost
 
 - name: Add hosts to deprovision to deprovision group
