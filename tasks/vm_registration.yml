@@ -16,19 +16,26 @@
 
 - name: Set discovered new VMs
   ansible.builtin.set_fact:
-    proxmox_provision_vms: "{{ proxmox_provision_vms + [hostvars[item].vmid] }}"
+    proxmox_provision_vms: "{{ proxmox_provision_vms + [item.vmid] }}"
   loop: "{{ vms }}"
   when:
-    - inventory_hostname == hostvars[item].node | default(proxmox_default_node)
+    - inventory_hostname == item.node | default(inventory_hostname)
   delegate_to: localhost
 
 - name: Add discovered VMs to provision group
   ansible.builtin.add_host:
-    name: "{{ item }}"
+    name: "{{ item.name }}"
     groups: "proxmox_provision_{{ inventory_hostname }}"
+    vmid: "{{ item.vmid }}"
+    cores: "{{ item.cores | default(proxmox_default_cores) }}"
+    memory: "{{ item.memory | default(proxmox_default_memory) }}"
+    disk: "{{ item.disk | default(proxmox_default_disk) }}"
+    storage: "{{ item.storage | default(proxmox_default_storage) }}"
+    template: "{{ item.template | default(proxmox_default_template) }}"
+    node: "{{ item.node | default(inventory_hostname) }}"
   when:
-    - hostvars[item].vmid | string not in proxmox_inventory_vms
-    - inventory_hostname == hostvars[item].node | default(proxmox_default_node)
+    - item.vmid | string not in proxmox_inventory_vms
+    - inventory_hostname == item.node | default(inventory_hostname)
   loop: "{{ vms }}"
 
 - name: Set deprovision inventory
@@ -45,11 +52,11 @@
 
 - name: Set fact for static IP based on vmid
   ansible.builtin.set_fact:
-    vmid_ip: "{{ proxmox_subnet_stripped }}.{{ hostvars[item].vmid }}"
-  delegate_to: "{{ item }}"
+    vmid_ip: "{{ proxmox_subnet_stripped }}.{{ item.vmid }}"
+  delegate_to: "{{ item.name }}"
   delegate_facts: true
   vars:
     proxmox_subnet_stripped: "{{ proxmox_subnet | regex_replace('\\.[^\\.]*$', '') }}"
   when:
-    - inventory_hostname == hostvars[item].node | default(proxmox_default_node)
+    - inventory_hostname == item.node | default(inventory_hostname)
   loop: "{{ vms }}"
