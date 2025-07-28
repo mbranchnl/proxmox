@@ -45,7 +45,7 @@
 
 - name: Set all configured VM IDs
   ansible.builtin.set_fact:
-    proxmox_configured_vms: "{{ vms | selectattr('node', 'undefined') | map(attribute='vmid') | list + vms | selectattr('node', 'defined') | selectattr('node', 'equalto', inventory_hostname) | map(attribute='vmid') | list }}"
+    proxmox_configured_vms: "{{ vms | selectattr('node', 'undefined') | map(attribute='vmid') | list + vms | selectattr('node', 'defined') | selectattr('node', 'equalto', inventory_hostname) | map(attribute='vmid') | list }}"  # yamllint disable-line rule:line-length
   delegate_to: localhost
 
 - name: Set deprovision inventory
