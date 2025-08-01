@@ -24,4 +24,4 @@ proxmox_scaling_governor: "powersave"
 proxmox_datastore_default_fs: ext4
 proxmox_allow_node_configuration: true
 
-vms: []
+proxmox_vms: []

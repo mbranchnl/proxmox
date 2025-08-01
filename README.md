@@ -1,6 +1,6 @@
 # Proxmox (homelab) state role
 
-This ansible-role helps you deploying Proxmox VMs with ease. In my homelab I deploy or scale VM's within 1 minute.
+This ansible-role helps you deploying Proxmox proxmox_vms with ease. In my homelab I deploy or scale VM's within 1 minute.
 
 ## Requirements
 
@@ -30,7 +30,7 @@ One of the first steps is to configure the vars defined in `defaults/main.yml`. 
 
 ### Inventory
 
-The inventory should define your Proxmox hosts in the `proxmox` group and your VMs in the `servers` group. For example:
+The inventory should define your Proxmox hosts in the `proxmox` group and your proxmox_vms in the `servers` group. For example:
 
 ```yaml
 proxmox:

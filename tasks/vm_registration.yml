@@ -21,13 +21,13 @@
 - name: Set discovered new VMs
   ansible.builtin.set_fact:
     proxmox_provision_vms: "{{ proxmox_provision_vms + [item.vmid] }}"
-  loop: "{{ vms }}"
+  loop: "{{ proxmox_vms }}"
   when:
     - item.vmid | string not in proxmox_inventory_vms
     - inventory_hostname == item.node | default(inventory_hostname)
   delegate_to: localhost
 
-- name: Add discovered VMs to provision group
+- name: Add discovered proxmox_vms to provision group
   ansible.builtin.add_host:
     name: "{{ item.name }}"
     groups: "proxmox_provision_{{ inventory_hostname }}"
@@ -41,11 +41,11 @@
   when:
     - item.vmid | string not in proxmox_inventory_vms
     - inventory_hostname == item.node | default(inventory_hostname)
-  loop: "{{ vms }}"
+  loop: "{{ proxmox_vms }}"
 
 - name: Set all configured VM IDs
   ansible.builtin.set_fact:
-    proxmox_configured_vms: "{{ vms | selectattr('node', 'undefined') | map(attribute='vmid') | list + vms | selectattr('node', 'defined') | selectattr('node', 'equalto', inventory_hostname) | map(attribute='vmid') | list }}"  # yamllint disable-line rule:line-length
+    proxmox_configured_vms: "{{ proxmox_vms | selectattr('node', 'undefined') | map(attribute='vmid') | list + proxmox_vms | selectattr('node', 'defined') | selectattr('node', 'equalto', inventory_hostname) | map(attribute='vmid') | list }}"  # yamllint disable-line rule:line-length
   delegate_to: localhost
 
 - name: Set deprovision inventory
@@ -69,4 +69,4 @@
     proxmox_subnet_stripped: "{{ proxmox_subnet | regex_replace('\\.[^\\.]*$', '') }}"
   when:
     - inventory_hostname == item.node | default(inventory_hostname)
-  loop: "{{ vms }}"
+  loop: "{{ proxmox_vms }}"
