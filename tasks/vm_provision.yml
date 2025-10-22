@@ -35,7 +35,7 @@
   delegate_to: localhost
 
 - name: Set up IP-adress  # noqa command-instead-of-shell no-changed-when
-  ansible.builtin.shell: "qm set {{ hostvars[item].vmid }} --ipconfig0 ip={{ hostvars[item].vmid_ip }}/24,gw={{ proxmox_gateway }}"
+  ansible.builtin.shell: "qm set {{ hostvars[item].vmid }} --ipconfig0 ip={{ hostvars[item].proxmox_vmid_ip }}/24,gw={{ proxmox_gateway }}"
   loop: "{{ groups['proxmox_provision_' + inventory_hostname] }}"
   when:
     - "'proxmox_provision_' + inventory_hostname in groups"
@@ -58,7 +58,7 @@
 - name: Wait max 5 minutes for port 22 to become open and contain "OpenSSH"
   ansible.builtin.wait_for:
     port: 22
-    host: '{{ hostvars[item].vmid_ip }}'
+    host: '{{ hostvars[item].proxmox_vmid_ip }}'
     search_regex: OpenSSH
     delay: 5
     timeout: 300
