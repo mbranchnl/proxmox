@@ -41,6 +41,10 @@
     - "'proxmox_provision_' + inventory_hostname in groups"
     - inventory_hostname == hostvars[item].node | default(inventory_hostname)
 
+- name: Wait
+  ansible.builtin.wait_for:
+    timeout: 10
+
 - name: Start VM
   community.general.proxmox_kvm:
     api_user: "{{ proxmox_api_user }}"

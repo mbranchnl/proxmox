@@ -14,7 +14,7 @@
 proxmox_gateway: "{{ proxmox_subnet | ansible.utils.ipaddr('net') | ansible.utils.ipaddr('1') | ansible.utils.ipaddr('address') }}"
 
 # vmid for default template
-proxmox_default_template: 1012
+proxmox_default_template: 2010
 
 # Default specs
 proxmox_cores: 1

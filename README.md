@@ -121,7 +121,7 @@ proxmox_default_storagepool:
 vmid for default template:
 
 ```yaml
-proxmox_default_template: 1012
+proxmox_default_template: 2009
 ```
 
 Default VM specifications:
