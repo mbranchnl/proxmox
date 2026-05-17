@@ -9,7 +9,7 @@
     newid: "{{ hostvars[item].vmid }}"
     name: "{{ hostvars[item].inventory_hostname | string }}"
     node: "{{ proxmox_api_hostname }}"
-    storage: "{{ hostvars[item].datastore | default('vmstore02') }}"
+    storage: "{{ hostvars[item].datastore | default(proxmox_default_storagepool) }}"
     format: qcow2
     timeout: 300
   loop: "{{ groups['proxmox_provision_' + inventory_hostname] }}"
